@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drinks Scratchpad</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+/* Layout: one column. Orders to ring in, then orders to bring out. A dictation box is pinned at the thumb; a sheet opens to check the split. */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#E1E7EA; --ink:#16232D; --ink-soft:#52626E; --line:#CAD3D9;
+  --felt:#1E6B4E; --felt-ink:#FFFFFF; --felt-soft:#D6EBE1; --brass:#8A5A00; --brass-soft:#F6E7C4; --danger:#A3261F; --scrim:rgba(9,18,24,.55);
+  --font-display:"Zilla Slab",Georgia,"Times New Roman",serif;
+  --font-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E181F; --surface:#17252E; --surface-2:#223540; --ink:#E8F0F3; --ink-soft:#9FB2BC; --line:#2E434F;
+    --felt:#4DBB92; --felt-ink:#06201A; --felt-soft:#163A2D; --brass:#F0C46A; --brass-soft:#3B2E10; --danger:#FF9A90; --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E181F; --surface:#17252E; --surface-2:#223540; --ink:#E8F0F3; --ink-soft:#9FB2BC; --line:#2E434F;
+  --felt:#4DBB92; --felt-ink:#06201A; --felt-soft:#163A2D; --brass:#F0C46A; --brass-soft:#3B2E10; --danger:#FF9A90; --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.4 var(--font-body);-webkit-text-size-adjust:100%;overflow-wrap:break-word}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+html.lock{overflow:hidden}
+p,h1,h2{margin:0}
+.gutter{max-width:640px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.muted{color:var(--ink-soft)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .gutter{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;padding-bottom:10px}
+.ttl{display:grid;gap:2px;min-width:0}
+.sub:empty{display:none}
+#tabsBtn{min-height:46px;flex:none}
+.tl{font-size:18px;line-height:1.3}
+h1{font:700 25px/1.1 var(--font-display);letter-spacing:.01em}
+.sub{color:var(--ink-soft);font-size:15px;white-space:nowrap}
+
+main.gutter{padding-top:14px;padding-bottom:calc(var(--jot-h,200px) + 24px + env(safe-area-inset-bottom,0px))}
+.list{display:grid;gap:10px}
+.sec{display:flex;align-items:center;gap:10px;padding-top:8px;font:600 19px/1 var(--font-display);color:var(--ink-soft)}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.card{display:grid;gap:6px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.card.done{background:transparent;border-style:dashed}
+.person{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.body{display:grid;gap:2px;min-width:0}
+.name{font:700 21px/1.2 var(--font-body)}
+.what{font-size:21px;line-height:1.25}
+.qty{font-weight:700;color:var(--brass)}
+.to{font-size:17px;color:var(--ink-soft)}
+.to b{font:700 12px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;margin-right:8px;color:var(--brass)}
+.av{-webkit-appearance:none;appearance:none;width:60px;height:60px;padding:0;border:1.5px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink-soft);overflow:hidden;cursor:pointer;display:grid;place-items:center;font:700 24px/1 var(--font-display);touch-action:manipulation}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av:focus-visible{outline:3px solid var(--felt);outline-offset:2px}
+.av .plus{font:700 11px/1.1 var(--font-body);letter-spacing:.06em;text-transform:uppercase}
+.acts{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:6px}
+.pay-badge{display:inline-block;margin-left:10px;padding:4px 8px;border-radius:6px;font:700 12px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;vertical-align:middle}
+.pay-badge.cash{background:var(--felt-soft);color:var(--ink)}
+.pay-badge.tab{background:var(--brass-soft);color:var(--brass)}
+.empty{display:grid;gap:12px;padding:24px 0}
+.empty h2{font:700 28px/1.15 var(--font-display);text-wrap:balance}
+.empty p{max-width:38ch}
+.empty q{font-style:normal;font-weight:700}
+
+.btn{-webkit-appearance:none;appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 16px/1 var(--font-body);min-height:48px;padding:0 16px;border-radius:12px;cursor:pointer;touch-action:manipulation}
+.btn:focus-visible{outline:3px solid var(--felt);outline-offset:2px}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--felt);border-color:var(--felt);color:var(--felt-ink);min-height:54px;font-size:18px}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--ink-soft)}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn.block{width:100%}
+.input{width:100%;min-width:0;min-height:50px;padding:10px 14px;font:400 18px/1.3 var(--font-body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;-webkit-appearance:none;appearance:none}
+.input::placeholder{color:var(--ink-soft)}
+.input:focus-visible{outline:3px solid var(--felt);outline-offset:1px;border-color:var(--felt)}
+textarea.input{display:block;resize:none;min-height:68px;line-height:1.35}
+.err{color:var(--danger);font-weight:700}
+.err:empty{display:none}
+
+.jot{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.jot .gutter{display:grid;gap:8px;padding-top:10px;padding-bottom:10px}
+.jrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px}
+
+.tail{display:flex;justify-content:center;padding-top:14px}
+.toast{position:fixed;left:0;right:0;bottom:calc(var(--jot-h,200px) + 10px + env(safe-area-inset-bottom,0px));z-index:7;pointer-events:none}
+.toast .msg{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--ink);color:var(--bg);box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:700}
+.toast button{-webkit-appearance:none;appearance:none;min-height:44px;padding:0 6px;border:0;background:transparent;color:var(--bg);font:700 16px/1 var(--font-body);text-decoration:underline;cursor:pointer}
+
+.scrim{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim)}
+.sheet{width:100%;max-width:640px;max-height:94%;overflow:auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:12px}
+.sheet h2{font:700 24px/1.2 var(--font-display)}
+.rows{display:grid;gap:12px}
+.rrow{display:grid;gap:8px;padding:12px;background:var(--bg);border:1.5px solid var(--line);border-radius:14px}
+.rrow.bad{border-color:var(--danger)}
+.rtop{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg{-webkit-appearance:none;appearance:none;min-height:48px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:700 17px/1 var(--font-body);cursor:pointer;touch-action:manipulation}
+.seg[aria-pressed="true"]{background:var(--felt);border-color:var(--felt);color:var(--felt-ink)}
+.seg:focus-visible{outline:3px solid var(--felt);outline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+
+.quick{display:grid;grid-template-columns:56px 56px 56px minmax(0,1fr);gap:8px}
+.quick .btn{padding:0;font-size:26px;min-height:54px}
+.quick .btn.primary{font-size:17px;padding:0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips:empty{display:none}
+.chip{-webkit-appearance:none;appearance:none;display:flex;align-items:center;gap:8px;border:1.5px solid var(--felt);background:var(--felt-soft);color:var(--ink);border-radius:999px;min-height:48px;padding:0 14px;font:400 17px/1.2 var(--font-body);cursor:pointer;touch-action:manipulation;max-width:100%}
+.chip.hasimg{padding-left:4px}
+.chip img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none}
+.chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip:focus-visible{outline:3px solid var(--felt);outline-offset:2px}
+.seg.big{min-height:54px;font-size:19px}
+.flab{display:grid;gap:6px;font-weight:700;font-size:15px}
+.flab .hint{font-weight:400;color:var(--ink-soft)}
+.qrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.step{display:grid;grid-template-columns:54px minmax(0,1fr) 54px;gap:8px}
+.step .btn{padding:0;font-size:26px;min-height:50px}
+.step .input{text-align:center;font-weight:700}
+.sheet.q{display:flex;flex-direction:column;overflow:hidden;gap:0;padding-bottom:0}
+.sheet.q .sbody{display:grid;gap:12px;overflow:auto;min-height:0;padding-bottom:12px}
+.sheet.q .sfoot{display:grid;gap:8px;padding-top:10px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface)}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.seg{transition:background-color .12s,color .12s}
+  .sheet{animation:rise .18s ease-out}
+  @keyframes rise{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="gutter">
+    <div class="ttl">
+      <h1>Drinks Scratchpad</h1>
+      <span class="sub" id="sub"></span>
+    </div>
+    <button class="btn" id="tabsBtn" type="button" aria-haspopup="dialog" aria-label="Open tabs">Tabs</button>
+  </div>
+</header>
+
+<main class="gutter">
+  <div class="list" id="view"></div>
+</main>
+
+<div class="toast" id="toast" role="status" hidden>
+  <div class="gutter"><div class="msg"><span id="toastMsg"></span><button id="toastBtn" type="button" hidden></button></div></div>
+</div>
+
+<input class="sr" id="file" type="file" accept="image/*" tabindex="-1" aria-label="Choose a photo">
+<datalist id="people"></datalist>
+
+<div class="jot" id="jot">
+  <div class="gutter">
+    <label class="sr" for="say">Say the round</label>
+    <textarea class="input" id="say" rows="2" placeholder="Describe order with text or microphone… DON'T forget the COMMA! :)" autocapitalize="sentences" autocorrect="off" spellcheck="false"></textarea>
+    <p class="err" id="err" role="alert"></p>
+    <div class="quick">
+      <button class="btn" id="qBeer" type="button" aria-label="Quick add a beer">🍺</button>
+      <button class="btn" id="qMix" type="button" aria-label="Quick add a mixed drink">🍹</button>
+      <button class="btn" id="qAgain" type="button" aria-label="Same again: repeat someone's last order">🔁</button>
+      <button class="btn primary" id="split" type="button">Split into orders</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <section class="sheet q" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="sbody">
+      <div>
+        <h2 id="sTitle">Check these orders</h2>
+        <p class="muted" id="sHint" style="font-size:15px;margin-top:4px"></p>
+      </div>
+      <div class="rows" id="rows"></div>
+      <button class="btn block" id="more" type="button">Add another order</button>
+    </div>
+    <div class="sfoot">
+      <p class="err" id="sErr" role="alert"></p>
+      <div class="two">
+        <button class="btn primary" id="sOk" type="button">Add</button>
+        <button class="btn" id="sCancel" type="button">Cancel</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="qscrim" hidden>
+  <section class="sheet q" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+    <div class="sbody">
+      <h2 id="qTitle">Quick add</h2>
+      <div class="pay" role="group" aria-label="Type of drink">
+        <button class="seg big" id="kBeer" type="button" aria-pressed="true">🍺 Beer</button>
+        <button class="seg big" id="kMix" type="button" aria-pressed="false">🍹 Mixed</button>
+      </div>
+      <div class="pay" id="qfmt" role="group" aria-label="Bottle or draft">
+        <button class="seg big" id="fBottle" type="button" aria-pressed="false">Bottle</button>
+        <button class="seg big" id="fDraft" type="button" aria-pressed="false">Draft</button>
+      </div>
+      <label class="flab" for="qDrink">Drink <span class="hint">type the first 3 letters</span>
+        <input class="input" id="qDrink" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Coo">
+      </label>
+      <div class="chips" id="qDrinkChips"></div>
+      <div class="qrow" role="group" aria-labelledby="qQtyL">
+        <span class="flab" id="qQtyL">How many</span>
+        <div class="step">
+          <button class="btn" id="qMinus" type="button" aria-label="One fewer">−</button>
+          <input class="input" id="qQty" type="number" inputmode="numeric" min="1" max="99" value="1" aria-label="How many">
+          <button class="btn" id="qPlus" type="button" aria-label="One more">+</button>
+        </div>
+      </div>
+      <label class="flab" for="qWho">Who <span class="hint">a name, or what they look like</span>
+        <input class="input" id="qWho" type="text" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="false">
+      </label>
+      <div class="chips" id="qWhoChips"></div>
+      <div class="pay" role="group" aria-label="How they pay">
+        <button class="seg" id="qCash" type="button" aria-pressed="false">Cash</button>
+        <button class="seg" id="qTab" type="button" aria-pressed="false">Tab</button>
+      </div>
+    </div>
+    <div class="sfoot">
+      <p class="err" id="qErr" role="alert"></p>
+      <p id="qMsg" role="status" style="font-weight:700;color:var(--felt)"></p>
+      <div class="two">
+        <button class="btn primary" id="qAdd" type="button">Add order</button>
+        <button class="btn" id="qAnother" type="button">Add another drink</button>
+      </div>
+      <div class="two">
+        <button class="btn quiet" id="qHand" type="button">Fill in by hand</button>
+        <button class="btn quiet" id="qCancel" type="button">Cancel</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="tscrim" hidden>
+  <section class="sheet q" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+    <div class="sbody">
+      <div>
+        <h2 id="tTitle">Open tabs</h2>
+        <p class="muted" style="font-size:15px;margin-top:4px">Everyone on a tab tonight and the drinks on it.</p>
+      </div>
+      <div class="rows" id="tList"></div>
+    </div>
+    <div class="sfoot">
+      <div class="two">
+        <button class="btn quiet" id="tClose" type="button">Close out the night</button>
+        <button class="btn primary" id="tDone" type="button">Done</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="rscrim" hidden>
+  <section class="sheet q" role="dialog" aria-modal="true" aria-labelledby="rTitle">
+    <div class="sbody">
+      <div>
+        <h2 id="rTitle">Same again</h2>
+        <p class="muted" style="font-size:15px;margin-top:4px">Tap Again to repeat what someone had last time. It lands on your list to ring in.</p>
+      </div>
+      <input class="input" id="rFind" type="search" placeholder="Find a name" aria-label="Find a name" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <p id="rMsg" role="status" style="font-weight:700;color:var(--felt)"></p>
+      <div class="rows" id="rList"></div>
+    </div>
+    <div class="sfoot">
+      <button class="btn primary block" id="rDone" type="button">Done</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function newId() { return "o" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function titleCase(s) { return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  function capFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+  var KEY = "drinksScratchpad.v1";
+  var S = { items: [], hist: [] }; /* hist: most recent first, [{who, what, photo, pay}] */
+  var kept = true, warned = false, photoTarget = null;
+
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var p = JSON.parse(raw); if (p && Array.isArray(p.items) && Array.isArray(p.hist)) S = p; }
+  } catch (e) { kept = false; }
+  if (!Array.isArray(S.drinks)) S.drinks = [];
+  function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch (e) { kept = false; if (!warned) { warned = true; toast("Couldn't save that. The pad may clear if you close it."); } }
+  }
+
+  var toastTimer = null;
+  function hideToast() { $("#toast").hidden = true; }
+  function toast(msg, action) {
+    var b = $("#toastBtn");
+    $("#toastMsg").textContent = msg;
+    if (action) { b.hidden = false; b.textContent = action.label; b.onclick = function () { hideToast(); action.fn(); }; }
+    else { b.hidden = true; b.onclick = null; }
+    $("#toast").hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, action ? 6000 : 2800);
+  }
+
+  function findPerson(who) {
+    if (!who) return null;
+    var k = who.toLowerCase();
+    for (var i = 0; i < S.hist.length; i++) if (S.hist[i].who.toLowerCase() === k) return S.hist[i];
+    return null;
+  }
+  function remember(who, what, photo, pay, qty) {
+    if (!who) return;
+    var old = findPerson(who), now = Date.now();
+    var keep = photo || (old && old.photo) || "";
+    var lines = (old && old.lines) ? old.lines.slice() : [], lt = (old && old.lt) || 0;
+    if (qty) { /* orders for one person within 20 minutes count as one round */
+      if (!lines.length || now - lt > 20 * 60000) lines = [];
+      var k = (what || "").toLowerCase(), hit = null;
+      lines.forEach(function (l) { if (l.what.toLowerCase() === k) hit = l; });
+      if (hit) hit.qty += qty; else lines.push({ what: what || "", qty: qty });
+      lt = now;
+    }
+    S.hist = S.hist.filter(function (h) { return h.who.toLowerCase() !== who.toLowerCase(); });
+    S.hist.unshift({ who: who, what: what || (old ? old.what : ""), photo: keep, pay: pay || (old && old.pay) || "", lines: lines, lt: lt });
+    if (S.hist.length > 60) S.hist.length = 60;
+  }
+
+  function button(cls, text, fn, label) {
+    var b = el("button", "btn " + cls, text);
+    b.type = "button";
+    if (label) b.setAttribute("aria-label", label);
+    b.onclick = fn;
+    return b;
+  }
+
+  /* ---------- Splitting a spoken round into orders ---------- */
+  /* PARSE START */
+  var NUM = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+    nineteen: 19, twenty: 20, dozen: 12, couple: 2, another: 1 };
+
+  function tidyWho(s) {
+    s = (s || "").trim();
+    if (!s) return "";
+    var known = findPerson(s);
+    if (known) return known.who;
+    if (/\b(the|a|an|with|in|at|by|near|over|on|from|and)\b/i.test(s)) return capFirst(s);
+    return titleCase(s);
+  }
+
+  /* If the commas went missing, start a new order at a number that follows a "for ..." part. */
+  function splitRuns(seg) {
+    var words = seg.split(/\s+/), parts = [], cur = [], sawFor = false;
+    var starters = /^(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|another)$/i;
+    var blockers = /^(the|a|an|of|table|seat|at|by|to|with|and|number|no)$/i;
+    words.forEach(function (w, i) {
+      if (sawFor && cur.length && starters.test(w) && i + 1 < words.length && !blockers.test(words[i - 1])) {
+        parts.push(cur.join(" ")); cur = []; sawFor = false;
+      }
+      cur.push(w);
+      if (/^for$/i.test(w)) sawFor = true;
+    });
+    if (cur.length) parts.push(cur.join(" "));
+    return parts;
+  }
+
+  function parseRound(text) {
+    var segs = String(text).split(/\s*(?:[,;\n]+|\.(?!\d)|\band then\b|\bthen\b)\s*/i);
+    var out = [], pieces = [];
+    segs.forEach(function (s0) { splitRuns(s0).forEach(function (q) { pieces.push(q); }); });
+    pieces.forEach(function (seg) {
+      seg = seg.replace(/^\s*(?:and|also|plus)\s+/i, "").trim();
+      if (!seg) return;
+      var qty = 1, rest = seg, m = rest.match(/^(\d{1,3})(?:\s*x)?\s+(?:more\s+)?(.+)$/i);
+      if (m) { qty = parseInt(m[1], 10); rest = m[2]; }
+      else {
+        m = rest.match(/^(a couple of|a dozen|\w+)\s+(?:more\s+|of\s+)?(.+)$/i);
+        if (m) {
+          var key = m[1].toLowerCase();
+          if (key === "a couple of") qty = 2;
+          else if (key === "a dozen") qty = 12;
+          else if (Object.prototype.hasOwnProperty.call(NUM, key)) qty = NUM[key];
+          else m = null;
+          if (m) rest = m[2];
+        }
+      }
+      var who = "", what = rest, fm = rest.match(/^(.*?)\s+for\s+(.+)$/i);
+      if (fm) { what = fm[1].trim(); who = fm[2].trim(); }
+      var name = tidyWho(who), known = findPerson(name);
+      out.push({ qty: qty, what: capFirst(what.trim()), who: name, pay: (known && known.pay) || "" });
+    });
+    return out;
+  }
+  /* PARSE END */
+
+  /* ---------- Photos ---------- */
+  function shrink(file, cb) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var s = Math.min(img.width, img.height), c = document.createElement("canvas");
+      c.width = c.height = 160;
+      c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 160, 160);
+      URL.revokeObjectURL(url);
+      cb(c.toDataURL("image/jpeg", 0.72));
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+  function pickPhoto(who) { photoTarget = who; $("#file").value = ""; $("#file").click(); }
+  $("#file").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f || !photoTarget) return;
+    shrink(f, function (data) {
+      if (!data) { toast("That photo wouldn't open. Try another one."); return; }
+      var who = photoTarget, cur = findPerson(who);
+      remember(who, cur ? cur.what : "", data);
+      persist(); render();
+      toast("Photo saved for " + who);
+    });
+  });
+
+  /* ---------- Orders ---------- */
+  function advance(it) {
+    if (!it.stage) {
+      it.stage = 1; persist(); render();
+      toast("Rung in for " + (it.who || "order"), { label: "Undo", fn: function () { it.stage = 0; persist(); render(); } });
+    } else {
+      it.stage = 2; persist(); render();
+      toast("Delivered: " + (it.who || "order"), { label: "Undo", fn: function () { it.stage = 1; persist(); render(); } });
+    }
+  }
+  function remove(it) {
+    var idx = S.items.indexOf(it);
+    S.items.splice(idx, 1); persist(); render();
+    toast("Removed " + (it.who || "order"), { label: "Undo", fn: function () { S.items.splice(Math.min(idx, S.items.length), 0, it); persist(); render(); } });
+  }
+
+  function avatar(it) {
+    var person = findPerson(it.who);
+    var b = el("button", "av");
+    b.type = "button";
+    if (person && person.photo) {
+      var i = document.createElement("img"); i.src = person.photo; i.alt = "";
+      b.append(i);
+      b.setAttribute("aria-label", "Change photo for " + it.who);
+    } else if (it.who) {
+      b.append(el("span", "plus", "Add photo"));
+      b.setAttribute("aria-label", "Add a photo for " + it.who);
+    } else { b.disabled = true; b.setAttribute("aria-label", "No name, so no photo"); b.textContent = "?"; }
+    if (it.who) b.onclick = function () { pickPhoto(it.who); };
+    return b;
+  }
+
+  function card(it) {
+    var c = el("article", "card" + (it.stage ? " done" : ""));
+    var row = el("div", "person");
+    row.append(avatar(it));
+    var body = el("div", "body");
+    var nm = el("p", "name", it.who || "No name");
+    if (it.pay) nm.append(el("span", "pay-badge " + it.pay, it.stage ? (it.pay === "tab" ? "On tab" : "Collect cash") : (it.pay === "tab" ? "Tab" : "Cash")));
+    body.append(nm);
+    if (it.what || it.qty) {
+      var w = el("p", "what");
+      if (it.qty) { w.append(el("span", "qty", it.qty + " ×"), document.createTextNode(" ")); }
+      w.append(document.createTextNode(it.what || ""));
+      body.append(w);
+    }
+    if (it.to) { var t = el("p", "to"); t.append(el("b", null, "Goes to"), document.createTextNode(it.to)); body.append(t); }
+    row.append(body);
+    c.append(row);
+    var a = el("div", "acts");
+    a.append(
+      button("primary", it.stage ? "Delivered" : "Rung in", function () { advance(it); }, (it.stage ? "Delivered: " : "Rung in: ") + (it.who || "order")),
+      button("quiet", "Edit", function () { openSheet([{ qty: it.qty || 1, what: it.what || "", who: it.who || "", pay: it.pay || "" }], "edit", it); }, "Edit " + (it.who || "order")),
+      button("quiet", "Remove", function () { remove(it); }, "Remove " + (it.who || "order"))
+    );
+    c.append(a);
+    return c;
+  }
+
+  var clearArmed = false;
+  function render() {
+    var v = $("#view");
+    v.replaceChildren();
+    var todo = S.items.filter(function (i) { return !i.stage; });
+    var rung = S.items.filter(function (i) { return i.stage === 1; });
+    $("#sub").textContent = todo.length ? todo.length + " to ring in" : rung.length ? rung.length + " to bring out" : "";
+    var nt = tabGroups().length;
+    $("#tabsBtn").textContent = nt ? "Tabs \u00b7 " + nt : "Tabs";
+    $("#tabsBtn").setAttribute("aria-label", nt ? "Open tabs, " + nt + (nt === 1 ? " person" : " people") : "Open tabs");
+
+    if (!todo.length && !rung.length) {
+      var e = el("div", "empty");
+      e.append(el("h2", null, "Nothing on the pad"));
+      var p1 = el("p", "muted");
+      p1.append(document.createTextNode("Tap 🍺 or 🍹 below for a quick start, 🔁 to repeat someone\u2019s last order, or tap the box, tap the mic on your keyboard and say the round. Say "), el("q", null, "comma"), document.createTextNode(" between orders."));
+      e.append(p1);
+      if (!kept) e.append(el("p", "muted", "This view can't save, so the pad clears if you close it. Open it from your home screen to keep it."));
+      v.append(e);
+      return;
+    }
+    if (todo.length) { v.append(el("div", "sec", "To ring in")); todo.forEach(function (i) { v.append(card(i)); }); }
+    if (rung.length) { v.append(el("div", "sec", "Rung in, bring out")); rung.forEach(function (i) { v.append(card(i)); }); }
+    var t = el("div", "tail");
+    var b = button("quiet", clearArmed ? "Tap again to clear everything" : "Clear the pad", function () {
+      if (!clearArmed) { clearArmed = true; render(); setTimeout(function () { if (clearArmed) { clearArmed = false; render(); } }, 4000); return; }
+      var snap = S.items.slice();
+      S.items = S.items.filter(function (i) { return i.stage === 2; }); clearArmed = false; persist(); render();
+      toast("Cleared the pad", { label: "Undo", fn: function () { S.items = snap; persist(); render(); } });
+    });
+    if (clearArmed) b.classList.add("danger");
+    t.append(b);
+    v.append(t);
+  }
+
+  /* ---------- Check sheet ---------- */
+  var R = [], mode = "parse", editItem = null;
+
+  function blankRow() { return { qty: 1, what: "", who: "", pay: "" }; }
+  function paintOk() {
+    $("#sOk").textContent = mode === "edit" ? "Save" : "Add " + R.length + (R.length === 1 ? " order" : " orders");
+  }
+  function paintSeg(rowEl, r) {
+    rowEl.querySelector(".sc").setAttribute("aria-pressed", r.pay === "cash" ? "true" : "false");
+    rowEl.querySelector(".st").setAttribute("aria-pressed", r.pay === "tab" ? "true" : "false");
+  }
+
+  function buildRow(r, n) {
+    var d = el("div", "rrow");
+    var top = el("div", "rtop");
+    var q = el("input", "input");
+    q.type = "number"; q.min = "1"; q.max = "99"; q.inputMode = "numeric"; q.value = String(r.qty || "");
+    q.setAttribute("aria-label", "Order " + n + ": how many");
+    q.addEventListener("input", function () { r.qty = parseInt(q.value, 10) || 0; d.classList.remove("bad"); $("#sErr").textContent = ""; });
+    var w = el("input", "input");
+    w.type = "text"; w.value = r.what; w.placeholder = "Drink"; w.autocomplete = "off"; w.autocapitalize = "sentences";
+    w.setAttribute("aria-label", "Order " + n + ": drink");
+    w.addEventListener("input", function () { r.what = w.value; d.classList.remove("bad"); $("#sErr").textContent = ""; });
+    top.append(q, w);
+    var f = el("input", "input");
+    f.type = "text"; f.value = r.who; f.placeholder = "For who"; f.autocomplete = "off"; f.autocapitalize = "sentences";
+    f.setAttribute("list", "people");
+    f.setAttribute("aria-label", "Order " + n + ": who it is for");
+    f.addEventListener("input", function () { r.who = f.value; });
+    f.addEventListener("change", function () {
+      var known = findPerson(f.value.trim());
+      if (known && known.pay && !r.pay) { r.pay = known.pay; paintSeg(d, r); }
+    });
+    var pay = el("div", "pay");
+    pay.setAttribute("role", "group"); pay.setAttribute("aria-label", "Order " + n + ": how they pay");
+    var sc = el("button", "seg sc", "Cash"), st = el("button", "seg st", "Tab");
+    sc.type = st.type = "button";
+    sc.addEventListener("click", function () { r.pay = "cash"; paintSeg(d, r); d.classList.remove("bad"); $("#sErr").textContent = ""; });
+    st.addEventListener("click", function () { r.pay = "tab"; paintSeg(d, r); d.classList.remove("bad"); $("#sErr").textContent = ""; });
+    pay.append(sc, st);
+    d.append(top, f, pay);
+    if (mode !== "edit" && R.length > 1) {
+      d.append(button("quiet", "Remove this one", function () { R.splice(R.indexOf(r), 1); renderRows(); }, "Remove order " + n));
+    }
+    paintSeg(d, r);
+    return d;
+  }
+  function renderRows() {
+    var box = $("#rows");
+    box.replaceChildren();
+    R.forEach(function (r, i) { box.append(buildRow(r, i + 1)); });
+    paintOk();
+  }
+
+  function openSheet(rows, m, item) {
+    R = rows; mode = m; editItem = item || null;
+    $("#sTitle").textContent = m === "edit" ? "Edit order" : m === "hand" ? "Add an order" : "Check these orders";
+    $("#sHint").textContent = m === "edit" ? "Change anything, then save." : m === "hand" ? "Fill in the drink, then pick cash or tab." : "Fix anything that was misheard and pick cash or tab for each.";
+    $("#more").hidden = m === "edit";
+    $("#sErr").textContent = "";
+    var dl = $("#people");
+    dl.replaceChildren();
+    S.hist.forEach(function (h) { var o = document.createElement("option"); o.value = h.who; dl.append(o); });
+    renderRows();
+    $("#scrim").hidden = false;
+    document.documentElement.classList.add("lock");
+    $("#scrim .sbody").scrollTop = 0;
+    fitViewport();
+    if (m === "hand") setTimeout(function () { var i = $("#rows .rrow input:nth-of-type(2)"); if (i) i.focus(); }, 40);
+  }
+  function closeSheet() {
+    $("#scrim").hidden = true;
+    document.documentElement.classList.remove("lock");
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  $("#more").addEventListener("click", function () {
+    R.push(blankRow()); renderRows();
+    setTimeout(function () { var rr = $("#rows").lastElementChild; var i = rr && rr.querySelectorAll("input")[1]; if (i) i.focus(); }, 30);
+  });
+  $("#sCancel").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#scrim").hidden) closeSheet(); });
+
+  $("#sOk").addEventListener("click", function () {
+    var els = $("#rows").children;
+    for (var i = 0; i < R.length; i++) {
+      var r = R[i], need = "";
+      if (!String(r.what).trim()) need = "the drink";
+      else if (!(r.qty >= 1)) need = "a number";
+      else if (!r.pay) need = "cash or tab";
+      if (need) {
+        els[i].classList.add("bad");
+        els[i].scrollIntoView({ block: "center" });
+        $("#sErr").textContent = "Order " + (i + 1) + " needs " + need + ".";
+        return;
+      }
+    }
+    if (mode === "edit") {
+      var it = editItem, oldWho = it.who || "", r0 = R[0];
+      var who = tidyWho(r0.who), what = capFirst(r0.what.trim());
+      if (oldWho && oldWho.toLowerCase() !== who.toLowerCase()) {
+        var op = findPerson(oldWho), np = findPerson(who);
+        if (op && op.photo && !(np && np.photo)) remember(who, what, op.photo, r0.pay);
+      }
+      it.who = who; it.what = what; it.qty = r0.qty; it.pay = r0.pay;
+      if (who) remember(who, what, "", r0.pay);
+      persist(); closeSheet(); render();
+      toast("Saved");
+      return;
+    }
+    var now = Date.now(), n = R.length;
+    R.forEach(function (r, k) {
+      var who = tidyWho(r.who), what = capFirst(r.what.trim());
+      S.items.push({ id: newId(), who: who, what: what, qty: r.qty, pay: r.pay, stage: 0, t: now + k });
+      if (who) remember(who, what, "", r.pay, r.qty);
+    });
+    if (mode === "parse") { $("#say").value = ""; }
+    persist(); closeSheet(); render(); sizeJot();
+    toast("Added " + n + (n === 1 ? " order" : " orders"));
+  });
+
+  /* ---------- Dictation box ---------- */
+  $("#split").addEventListener("click", function () {
+    var t = $("#say").value.trim();
+    var rows = t ? parseRound(t) : [];
+    if (!rows.length) { $("#err").textContent = "Say or type an order first."; $("#say").focus(); return; }
+    $("#err").textContent = "";
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    openSheet(rows, "parse");
+  });
+  /* ---------- Quick add: drink type, bottle or draft, 3 letters, how many, who ---------- */
+  var STARTERS = {
+    beer: ["Coors Light", "Kokanee", "Molson Canadian", "Bud Light", "Budweiser", "1516", "Corona", "Stella Artois", "Guinness"],
+    mix: ["Caesar", "Rye and ginger", "Rum and coke", "Gin and tonic", "Vodka soda", "Shot"]
+  };
+  var Q = { kind: "beer", fmt: "", qty: 1, pay: "" };
+
+  function wordStarts(text, q) {
+    var t = text.toLowerCase(), k = q.toLowerCase();
+    return t.indexOf(k) === 0 || t.split(/[^a-z0-9]+/).some(function (w) { return w.indexOf(k) === 0; });
+  }
+  function drinkChoices(q) {
+    var out = [], seen = {};
+    function add(n) { var k = n.toLowerCase(); if (!seen[k]) { seen[k] = 1; out.push(n); } }
+    S.drinks.filter(function (d) { return d.kind === Q.kind && (Q.kind !== "beer" || !Q.fmt || d.fmt === Q.fmt); })
+      .forEach(function (d) { if (!q || wordStarts(d.name, q)) add(d.name); });
+    if (q) STARTERS[Q.kind].forEach(function (n) { if (wordStarts(n, q)) add(n); });
+    return out.slice(0, 6);
+  }
+  function learnDrink(name, kind, fmt) {
+    S.drinks = S.drinks.filter(function (d) { return !(d.name.toLowerCase() === name.toLowerCase() && d.kind === kind && d.fmt === fmt); });
+    S.drinks.unshift({ name: name, kind: kind, fmt: fmt });
+    if (S.drinks.length > 60) S.drinks.length = 60;
+  }
+  function pressed(sel, on) { $(sel).setAttribute("aria-pressed", on ? "true" : "false"); }
+
+  function paintDrinkChips() {
+    var box = $("#qDrinkChips");
+    box.replaceChildren();
+    drinkChoices($("#qDrink").value.trim()).forEach(function (n) {
+      var c = el("button", "chip"); c.type = "button"; c.append(el("span", null, n));
+      c.onclick = function () { $("#qDrink").value = n; $("#qErr").textContent = ""; paintDrinkChips(); };
+      box.append(c);
+    });
+  }
+  function paintWhoChips() {
+    var box = $("#qWhoChips"), q = $("#qWho").value.trim();
+    box.replaceChildren();
+    S.hist.filter(function (h) { return !q || wordStarts(h.who, q); }).slice(0, 6).forEach(function (h) {
+      var c = el("button", "chip" + (h.photo ? " hasimg" : "")); c.type = "button";
+      if (h.photo) { var i = document.createElement("img"); i.src = h.photo; i.alt = ""; c.append(i); }
+      c.append(el("span", null, h.who));
+      c.onclick = function () { $("#qWho").value = h.who; if (h.pay) Q.pay = h.pay; $("#qErr").textContent = ""; paintQuick(); };
+      box.append(c);
+    });
+  }
+  function paintQuick() {
+    pressed("#kBeer", Q.kind === "beer"); pressed("#kMix", Q.kind === "mix");
+    $("#qfmt").hidden = Q.kind !== "beer";
+    pressed("#fBottle", Q.fmt === "bottle"); pressed("#fDraft", Q.fmt === "draft");
+    pressed("#qCash", Q.pay === "cash"); pressed("#qTab", Q.pay === "tab");
+    paintDrinkChips(); paintWhoChips();
+  }
+  function openQuick(kind) {
+    Q = { kind: kind, fmt: "", qty: 1, pay: "" };
+    $("#qDrink").value = ""; $("#qWho").value = ""; $("#qQty").value = "1";
+    $("#qErr").textContent = ""; $("#qMsg").textContent = "";
+    paintQuick();
+    $("#qscrim").hidden = false;
+    document.documentElement.classList.add("lock");
+    fitViewport();
+    $("#qscrim .sbody").scrollTop = 0;
+    if (kind === "mix") setTimeout(function () { $("#qDrink").focus(); }, 40);
+  }
+  function closeQuick() {
+    $("#qscrim").hidden = true;
+    document.documentElement.classList.remove("lock");
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  function setQty(n) { Q.qty = Math.max(1, Math.min(99, n)); $("#qQty").value = String(Q.qty); $("#qErr").textContent = ""; }
+
+  function submitQuick(another) {
+    var name = $("#qDrink").value.trim(), who = $("#qWho").value.trim();
+    var qty = parseInt($("#qQty").value, 10) || 0;
+    var w = tidyWho(who), known = findPerson(w), pay = Q.pay || (known && known.pay) || "";
+    var msg = "";
+    if (Q.kind === "beer" && !Q.fmt) msg = "Bottle or draft?";
+    else if (!name) msg = "Which drink?";
+    else if (qty < 1) msg = "How many?";
+    else if (!who) msg = "Who is it for?";
+    else if (!pay) msg = "Cash or tab?";
+    if (msg) { $("#qErr").textContent = msg; return; }
+    var nm = capFirst(name), what = Q.kind === "beer" ? nm + " (" + Q.fmt + ")" : nm;
+    S.items.push({ id: newId(), who: w, what: what, qty: qty, pay: pay, stage: 0, t: Date.now() });
+    remember(w, what, "", pay, qty);
+    learnDrink(nm, Q.kind, Q.kind === "beer" ? Q.fmt : "");
+    persist(); render(); sizeJot();
+    var line = qty + " \u00d7 " + what + " for " + w;
+    if (another) {
+      Q.qty = 1; Q.pay = pay;
+      $("#qDrink").value = ""; $("#qQty").value = "1";
+      $("#qErr").textContent = ""; $("#qMsg").textContent = "Added " + line + ". Next drink is for " + w + ".";
+      paintQuick();
+      $("#qscrim .sbody").scrollTop = 0;
+      setTimeout(function () { $("#qDrink").focus(); }, 40);
+    } else { closeQuick(); toast("Added " + line); }
+  }
+
+  $("#qBeer").addEventListener("click", function () { openQuick("beer"); });
+  $("#qMix").addEventListener("click", function () { openQuick("mix"); });
+  $("#kBeer").addEventListener("click", function () { Q.kind = "beer"; paintQuick(); });
+  $("#kMix").addEventListener("click", function () { Q.kind = "mix"; Q.fmt = ""; paintQuick(); });
+  $("#fBottle").addEventListener("click", function () { Q.fmt = "bottle"; $("#qErr").textContent = ""; paintQuick(); $("#qDrink").focus(); });
+  $("#fDraft").addEventListener("click", function () { Q.fmt = "draft"; $("#qErr").textContent = ""; paintQuick(); $("#qDrink").focus(); });
+  $("#qDrink").addEventListener("input", function () { $("#qErr").textContent = ""; paintDrinkChips(); });
+  $("#qWho").addEventListener("input", function () { $("#qErr").textContent = ""; paintWhoChips(); });
+  $("#qWho").addEventListener("change", function () {
+    var k = findPerson(tidyWho($("#qWho").value.trim()));
+    if (k && k.pay && !Q.pay) { Q.pay = k.pay; paintQuick(); }
+  });
+  $("#qMinus").addEventListener("click", function () { setQty((parseInt($("#qQty").value, 10) || 1) - 1); });
+  $("#qPlus").addEventListener("click", function () { setQty((parseInt($("#qQty").value, 10) || 0) + 1); });
+  $("#qCash").addEventListener("click", function () { Q.pay = "cash"; $("#qErr").textContent = ""; paintQuick(); });
+  $("#qTab").addEventListener("click", function () { Q.pay = "tab"; $("#qErr").textContent = ""; paintQuick(); });
+  $("#qAdd").addEventListener("click", function () { submitQuick(false); });
+  $("#qAnother").addEventListener("click", function () { submitQuick(true); });
+  $("#qCancel").addEventListener("click", closeQuick);
+  $("#qHand").addEventListener("click", function () { closeQuick(); openSheet([blankRow()], "hand"); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#qscrim").hidden) closeQuick(); });
+
+  /* ---------- Same again ---------- */
+  function lastLines(h) {
+    if (h.lines && h.lines.length) return h.lines;
+    return h.what ? [{ what: h.what, qty: 1 }] : [];
+  }
+  function renderRepeat() {
+    var q = $("#rFind").value.trim(), box = $("#rList");
+    box.replaceChildren();
+    var ppl = S.hist.filter(function (h) { return lastLines(h).length && (!q || wordStarts(h.who, q)); }).slice(0, 30);
+    if (!ppl.length) { box.append(el("p", "muted", q ? "Nobody by that name. Try fewer letters." : "Nobody yet. People show up here after you order for them.")); return; }
+    ppl.forEach(function (h) {
+      var c = el("article", "card"), row = el("div", "person"), av = el("div", "av");
+      if (h.photo) { var im = document.createElement("img"); im.src = h.photo; im.alt = ""; av.append(im); }
+      else av.textContent = (h.who.charAt(0) || "?").toUpperCase();
+      row.append(av);
+      var body = el("div", "body"), nm = el("p", "name", h.who);
+      if (h.pay) nm.append(el("span", "pay-badge " + h.pay, h.pay === "tab" ? "Tab" : "Cash"));
+      body.append(nm);
+      lastLines(h).forEach(function (l) {
+        var p = el("p", "tl");
+        p.append(el("span", "qty", l.qty + " \u00d7"), document.createTextNode(" " + l.what));
+        body.append(p);
+      });
+      row.append(body); c.append(row);
+      var b = button("primary", "Again", function () { repeatFor(h, b); }, "Same again for " + h.who);
+      c.append(b);
+      var fg = button("quiet", "Forget " + h.who, function () {
+        if (fg.dataset.arm !== "1") {
+          fg.dataset.arm = "1"; fg.textContent = "Tap again to forget " + h.who;
+          setTimeout(function () { if (fg.isConnected) { fg.dataset.arm = ""; fg.textContent = "Forget " + h.who; } }, 3000);
+          return;
+        }
+        S.hist = S.hist.filter(function (x) { return x !== h; });
+        persist(); render(); renderRepeat();
+        $("#rMsg").style.color = "var(--felt)"; $("#rMsg").textContent = "Forgot " + h.who + ".";
+      }, "Forget " + h.who);
+      c.append(fg);
+      box.append(c);
+    });
+  }
+  function repeatFor(h, btn) {
+    if (!h.pay) { $("#rMsg").style.color = "var(--danger)"; $("#rMsg").textContent = "Cash or tab? Add one order for " + h.who + " the usual way first."; return; }
+    var lines = lastLines(h), now = Date.now();
+    lines.forEach(function (l, i) { S.items.push({ id: newId(), who: h.who, what: l.what, qty: l.qty, pay: h.pay, stage: 0, t: now + i }); });
+    persist(); render(); sizeJot();
+    btn.disabled = true; btn.textContent = "Added";
+    setTimeout(function () { btn.disabled = false; btn.textContent = "Again"; }, 1400);
+    $("#rMsg").style.color = "var(--felt)";
+    $("#rMsg").textContent = "Added " + lines.map(function (l) { return l.qty + " \u00d7 " + l.what; }).join(", ") + " for " + h.who + ".";
+  }
+  function openRepeat() {
+    $("#rFind").value = ""; $("#rMsg").textContent = "";
+    renderRepeat();
+    $("#rscrim").hidden = false;
+    document.documentElement.classList.add("lock");
+    fitViewport();
+    $("#rscrim .sbody").scrollTop = 0;
+  }
+  function closeRepeat() {
+    $("#rscrim").hidden = true;
+    document.documentElement.classList.remove("lock");
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  $("#qAgain").addEventListener("click", openRepeat);
+  $("#rDone").addEventListener("click", closeRepeat);
+  $("#rFind").addEventListener("input", renderRepeat);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#rscrim").hidden) closeRepeat(); });
+
+  /* ---------- Open tabs ---------- */
+  var tClear = false;
+  function tabGroups() {
+    var g = {}, order = [];
+    S.items.forEach(function (it) {
+      if (it.pay !== "tab") return;
+      var key = (it.who || "").trim().toLowerCase();
+      if (!g[key]) { g[key] = { who: it.who || "No name", total: 0, lines: {}, lineOrder: [], unrung: 0 }; order.push(key); }
+      var t = g[key], q = it.qty || 1, wk = (it.what || "").toLowerCase();
+      t.total += q;
+      if (!t.lines[wk]) { t.lines[wk] = { what: it.what || "", qty: 0 }; t.lineOrder.push(wk); }
+      t.lines[wk].qty += q;
+      if (!it.stage) t.unrung += q;
+    });
+    return order.map(function (k) { return g[k]; }).sort(function (a, b) { return a.who.localeCompare(b.who, undefined, { sensitivity: "base" }); });
+  }
+  function renderTabs() {
+    var box = $("#tList");
+    box.replaceChildren();
+    $("#tClose").textContent = tClear ? "Tap again to clear tabs and pad" : "Close out the night";
+    $("#tClose").classList.toggle("danger", tClear);
+    var gs = tabGroups();
+    if (!gs.length) { box.append(el("p", "muted", "No tabs yet tonight. Orders you mark Tab will show up here.")); return; }
+    gs.forEach(function (g) {
+      var c = el("article", "card"), row = el("div", "person");
+      var person = findPerson(g.who), av = el("div", "av");
+      if (person && person.photo) { var im = document.createElement("img"); im.src = person.photo; im.alt = ""; av.append(im); }
+      else av.textContent = (g.who.charAt(0) || "?").toUpperCase();
+      row.append(av);
+      var body = el("div", "body");
+      var nm = el("p", "name", g.who);
+      nm.append(el("span", "pay-badge tab", g.total + (g.total === 1 ? " drink" : " drinks")));
+      body.append(nm);
+      g.lineOrder.forEach(function (k) {
+        var l = g.lines[k], p = el("p", "tl");
+        p.append(el("span", "qty", l.qty + " \u00d7"), document.createTextNode(" " + l.what));
+        body.append(p);
+      });
+      if (g.unrung) { var u = el("p", "to"); u.append(el("b", null, "Not rung in"), document.createTextNode(String(g.unrung))); body.append(u); }
+      row.append(body); c.append(row); box.append(c);
+    });
+  }
+  function openTabs() {
+    tClear = false; renderTabs();
+    $("#tscrim").hidden = false;
+    document.documentElement.classList.add("lock");
+    fitViewport();
+    $("#tscrim .sbody").scrollTop = 0;
+  }
+  function closeTabs() {
+    tClear = false;
+    $("#tscrim").hidden = true;
+    document.documentElement.classList.remove("lock");
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  $("#tabsBtn").addEventListener("click", openTabs);
+  $("#tDone").addEventListener("click", closeTabs);
+  $("#tClose").addEventListener("click", function () {
+    if (!tClear) { tClear = true; renderTabs(); setTimeout(function () { if (tClear) { tClear = false; renderTabs(); } }, 4000); return; }
+    var snap = S.items.slice();
+    S.items = []; closeTabs(); persist(); render();
+    toast("Closed out the night", { label: "Undo", fn: function () { S.items = snap; persist(); render(); } });
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#tscrim").hidden) closeTabs(); });
+
+  /* Keep the bottom bar and the sheets above the keyboard on iPhone. */
+  function fitViewport() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    $("#jot").style.bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + "px";
+    document.querySelectorAll(".scrim").forEach(function (sc) {
+      sc.style.top = vv.offsetTop + "px"; sc.style.height = vv.height + "px"; sc.style.bottom = "auto";
+    });
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitViewport);
+    window.visualViewport.addEventListener("scroll", fitViewport);
+  }
+  $("#say").addEventListener("input", function () { $("#err").textContent = ""; });
+
+  function sizeJot() {
+    var h = $("#jot").getBoundingClientRect().height;
+    document.documentElement.style.setProperty("--jot-h", Math.ceil(h) + "px");
+  }
+
+  /* Ask the phone to keep the screen on while the pad is showing. Some phones refuse; that is fine. */
+  var lock = null;
+  function holdAwake() {
+    try {
+      if (!navigator.wakeLock || document.hidden) return;
+      navigator.wakeLock.request("screen").then(function (l) {
+        lock = l;
+        l.addEventListener("release", function () { lock = null; });
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !lock) holdAwake(); });
+  document.addEventListener("click", function () { if (!lock) holdAwake(); });
+  holdAwake();
+
+  window.addEventListener("resize", sizeJot);
+  render();
+  sizeJot();
+})();
+</script>
+</body>
+</html>
